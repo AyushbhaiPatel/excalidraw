@@ -871,14 +871,15 @@ export const textWysiwyg = ({
       event.preventDefault();
       submittedViaKeyboard = true;
       handleSubmit();
-    } else if (actionSaveToActiveFile.keyTest(event)) {
+    } else if (
+      actionSaveToActiveFile.keyTest(event) ||
+      actionSaveFileToDisk.keyTest(event)
+    ) {
       event.preventDefault();
       handleSubmit();
-      app.actionManager.executeAction(actionSaveToActiveFile, "keyboard");
-    } else if (actionSaveFileToDisk.keyTest(event)) {
-      event.preventDefault();
-      handleSubmit();
-      app.actionManager.executeAction(actionSaveFileToDisk, "keyboard");
+      // as on the canvas, so that the save actions the host disables
+      // (`UIOptions.canvasActions`) stay disabled
+      app.actionManager.handleKeyDown(event);
     } else if (event.key === KEYS.ENTER && event[KEYS.CTRL_OR_CMD]) {
       event.preventDefault();
       if (event.isComposing || event.keyCode === 229) {

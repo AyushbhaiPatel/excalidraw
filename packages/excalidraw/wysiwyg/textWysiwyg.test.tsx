@@ -3438,6 +3438,39 @@ describe("textWysiwyg", () => {
     });
   });
 
+  describe("save shortcuts", () => {
+    beforeEach(async () => {
+      await render(
+        <Excalidraw
+          handleKeyboardGlobally={true}
+          UIOptions={{ canvasActions: { saveToActiveFile: false } }}
+        />,
+      );
+    });
+
+    it("should not save via Cmd/Ctrl+S when the host disables it", async () => {
+      const saveSpy = vi
+        .spyOn(dataModule, "saveAsJSON")
+        .mockImplementation((async () => ({
+          fileHandle: null,
+        })) as unknown as typeof dataModule.saveAsJSON);
+
+      try {
+        const textElement = API.createElement({ type: "text", text: "test" });
+        API.setElements([textElement]);
+        mouse.doubleClickOn(textElement as ExcalidrawTextElement);
+        const editor = await getTextEditor({ waitForEditor: true });
+
+        fireEvent.keyDown(editor, { key: KEYS.S, ctrlKey: true });
+
+        expect(saveSpy).not.toHaveBeenCalled();
+        expect(h.state.editingTextElement).toBe(null);
+      } finally {
+        saveSpy.mockRestore();
+      }
+    });
+  });
+
   describe("autoResize handle", () => {
     beforeEach(async () => {
       await render(<Excalidraw handleKeyboardGlobally={true} />);
