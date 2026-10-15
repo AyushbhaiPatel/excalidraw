@@ -93,6 +93,39 @@ describe("flow chart creation", () => {
     expect(h.elements.length).toBe(1);
   });
 
+  it("links the start node only to the arrows of the inserted nodes", () => {
+    const initialNode = h.elements[0];
+
+    Keyboard.withModifierKeys({ ctrl: true }, () => {
+      Keyboard.keyPress(KEYS.ARROW_RIGHT);
+      Keyboard.keyPress(KEYS.ARROW_RIGHT);
+    });
+
+    Keyboard.keyUp(KEYS.CTRL_OR_CMD);
+
+    const arrowIds = h.elements
+      .filter((el) => el.type === "arrow")
+      .map((el) => el.id);
+    expect(arrowIds.length).toBe(2);
+    expect(
+      API.getElement(initialNode).boundElements?.map(({ id }) => id),
+    ).toEqual(arrowIds);
+  });
+
+  it("doesn't link the start node to the arrows of canceled nodes", () => {
+    const initialNode = h.elements[0];
+
+    Keyboard.withModifierKeys({ ctrl: true }, () => {
+      Keyboard.keyPress(KEYS.ARROW_RIGHT);
+    });
+
+    Keyboard.keyPress(KEYS.ESCAPE);
+    Keyboard.keyUp(KEYS.CTRL_OR_CMD);
+
+    expect(h.elements.length).toBe(1);
+    expect(API.getElement(initialNode).boundElements ?? []).toEqual([]);
+  });
+
   it("create nodes one at a time", () => {
     const initialNode = h.elements[0];
 

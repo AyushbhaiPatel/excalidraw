@@ -290,11 +290,15 @@ export const addNewNodes = (
     stickyCrossStart,
   );
 
+  // bind the pending arrows to a copy of the start node, which is linked to
+  // them only once they're inserted (see `bindPendingArrowsToStartNode`)
+  const pendingStartNode = { ...startNode };
+
   const nodes: NonDeletedExcalidrawElement[] = [];
   for (const position of positions) {
     const nextNode = cloneFlowchartNode(startNode, position.x, position.y);
     const bindingArrow = createBindingArrow(
-      startNode,
+      pendingStartNode,
       nextNode,
       direction,
       appState,
@@ -305,6 +309,36 @@ export const addNewNodes = (
   }
 
   return { nodes, crossStart };
+};
+
+/**
+ * Links the start node to the arrows of the just inserted pending nodes —
+ * not done while they're pending, so that it doesn't keep the arrows of the
+ * pending nodes that end up replaced or canceled.
+ */
+export const bindPendingArrowsToStartNode = (
+  nodes: readonly ExcalidrawElement[],
+  scene: Scene,
+) => {
+  for (const node of nodes) {
+    if (!isElbowArrow(node) || !node.startBinding) {
+      continue;
+    }
+
+    const startNode = scene.getNonDeletedElement(node.startBinding.elementId);
+    if (
+      startNode &&
+      isBindableElement(startNode) &&
+      !startNode.boundElements?.some(({ id }) => id === node.id)
+    ) {
+      scene.mutateElement(startNode, {
+        boundElements: (startNode.boundElements || []).concat({
+          id: node.id,
+          type: "arrow",
+        }),
+      });
+    }
+  }
 };
 
 const createBindingArrow = (

@@ -1,6 +1,7 @@
 import { isArrowKey, KEYS } from "@excalidraw/common";
 
 import {
+  bindPendingArrowsToStartNode,
   makeNextSelectedElementIds,
   CaptureUpdateAction,
   FlowChartCreator,
@@ -78,6 +79,7 @@ export class AppFlowchart {
       case "committed": {
         if (operation.nodes.length) {
           this.app.insertNewElements(operation.nodes);
+          bindPendingArrowsToStartNode(operation.nodes, this.app.scene);
         }
 
         const firstNode = operation.nodes[0];
