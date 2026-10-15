@@ -29,17 +29,19 @@ export const actionSelectAll = register({
       return false;
     }
 
-    const selectedElementIds = elements
-      .filter(
-        (element) =>
-          !element.isDeleted &&
-          !(isTextElement(element) && element.containerId) &&
-          !element.locked,
-      )
-      .reduce((map: Record<ExcalidrawElement["id"], true>, element) => {
+    const selectedElements = elements.filter(
+      (element) =>
+        !element.isDeleted &&
+        !(isTextElement(element) && element.containerId) &&
+        !element.locked,
+    );
+    const selectedElementIds = selectedElements.reduce(
+      (map: Record<ExcalidrawElement["id"], true>, element) => {
         map[element.id] = true;
         return map;
-      }, {});
+      },
+      {},
+    );
 
     return {
       appState: {
@@ -55,10 +57,9 @@ export const actionSelectAll = register({
         ),
         selectedLinearElement:
           // single linear element selected
-          Object.keys(selectedElementIds).length === 1 &&
-          isLinearElement(elements[0])
+          selectedElements.length === 1 && isLinearElement(selectedElements[0])
             ? new LinearElementEditor(
-                elements[0] as NonDeleted<ExcalidrawLinearElement>,
+                selectedElements[0] as NonDeleted<ExcalidrawLinearElement>,
                 arrayToMap(elements),
               )
             : null,
