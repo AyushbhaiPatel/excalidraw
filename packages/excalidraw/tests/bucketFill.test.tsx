@@ -659,6 +659,50 @@ describe("bucket fill tool", () => {
     expect(h.elements.filter((el) => el.type === "line")).toHaveLength(0);
   });
 
+  it("does not fill the part of a frame child its frame clips away", () => {
+    const frame = API.createElement({
+      type: "frame",
+      x: 0,
+      y: 0,
+      width: 200,
+      height: 200,
+    });
+    const rect = API.createElement({
+      type: "rectangle",
+      x: 100,
+      y: 50,
+      width: 200,
+      height: 100,
+      roundness: null,
+      backgroundColor: "transparent",
+      frameId: frame.id,
+    });
+    act(() => {
+      h.app.updateScene({
+        elements: [rect, frame],
+        captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+      });
+    });
+    act(() => {
+      API.setAppState({ currentItemBackgroundColor: "#ffec99" });
+    });
+    selectBucketFill();
+
+    // outside the frame the child is clipped away, so is any fill there
+    mouse.clickAt(250, 100);
+    mouse.clickAt(250, 100);
+    mouse.clickAt(250, 100);
+
+    expect(h.elements.filter((el) => el.type === "line")).toHaveLength(0);
+
+    // the visible part still fills
+    mouse.clickAt(150, 100);
+
+    expect(
+      h.elements.filter((el) => el.type === "line" && !el.isDeleted),
+    ).toHaveLength(1);
+  });
+
   it("does not fill on right-click or middle-click", () => {
     seedRectangle();
     act(() => {
