@@ -159,9 +159,15 @@ export class AppBucketFill {
       this.app.state.currentItemBackgroundColor,
     );
 
-    const elements = this.app.scene.getNonDeletedElements();
-    const elementsMap = this.app.scene.getNonDeletedElementsMap();
     const point = pointFrom<GlobalPoint>(scenePointer.x, scenePointer.y);
+    // where a frame clips its children away, they neither own nor bound a
+    // fill: it would be clipped away along with them
+    const elements = this.app.scene
+      .getNonDeletedElements()
+      .filter(
+        (element) => !this.app.isClippedByFrameAt(point[0], point[1], element),
+      );
+    const elementsMap = this.app.scene.getNonDeletedElementsMap();
 
     const hitElement = this.app.getElementAtPosition(point[0], point[1]);
 
