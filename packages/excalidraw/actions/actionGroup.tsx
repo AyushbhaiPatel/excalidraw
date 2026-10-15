@@ -274,12 +274,14 @@ export const actionUngroup = register({
       if (frame) {
         nextElements = replaceAllElementsInFrame(
           nextElements,
+          // re-evaluate only the frame's children, which their groups may no
+          // longer keep in it — ungrouping doesn't add other elements to it
           getElementsInResizingFrame(
             nextElements,
             frame,
             appState,
             elementsMap,
-          ),
+          ).filter((element) => element.frameId === frame.id),
           frame,
         );
       }

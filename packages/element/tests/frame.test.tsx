@@ -13,6 +13,7 @@ import {
   render,
 } from "@excalidraw/excalidraw/tests/test-utils";
 
+import { actionUngroup } from "@excalidraw/excalidraw/actions";
 import { getSelectedElements } from "@excalidraw/excalidraw/scene";
 
 import { elementOverlapsWithFrame, shouldApplyFrameClip } from "../src/frame";
@@ -1284,5 +1285,96 @@ describe("adding elements to frames", () => {
       dragElementIntoFrame(frame2, rectangle1);
       expect(h.elements.length).toBe(4);
     });
+  });
+});
+
+describe("ungrouping in a frame", () => {
+  beforeEach(async () => {
+    await render(<Excalidraw />);
+  });
+
+  const frame = API.createElement({
+    type: "frame",
+    x: 0,
+    y: 0,
+    width: 400,
+    height: 400,
+  });
+
+  it("doesn't add other elements in the frame's bounds to it", () => {
+    const rect1 = API.createElement({
+      type: "rectangle",
+      x: 10,
+      y: 10,
+      width: 50,
+      height: 50,
+      groupIds: ["g1"],
+      frameId: frame.id,
+    });
+    const rect2 = API.createElement({
+      type: "rectangle",
+      x: 100,
+      y: 10,
+      width: 50,
+      height: 50,
+      groupIds: ["g1"],
+      frameId: frame.id,
+    });
+    // e.g. a frame dragged over a free element doesn't add it
+    const freeRect = API.createElement({
+      type: "rectangle",
+      x: 300,
+      y: 300,
+      width: 50,
+      height: 50,
+    });
+    const deletedRect = API.createElement({
+      type: "rectangle",
+      x: 200,
+      y: 300,
+      width: 50,
+      height: 50,
+      isDeleted: true,
+    });
+
+    API.setElements([rect1, rect2, freeRect, deletedRect, frame]);
+    API.setSelectedElements([rect1, rect2]);
+
+    API.executeAction(actionUngroup);
+
+    expect(API.getElement(rect1).groupIds).toEqual([]);
+    expect(API.getElement(rect1).frameId).toBe(frame.id);
+    expect(API.getElement(rect2).frameId).toBe(frame.id);
+    expect(API.getElement(freeRect).frameId).toBe(null);
+    expect(API.getElement(deletedRect).frameId).toBe(null);
+  });
+
+  it("removes the former group members outside the frame from it", () => {
+    const rect1 = API.createElement({
+      type: "rectangle",
+      x: 10,
+      y: 10,
+      width: 50,
+      height: 50,
+      groupIds: ["g1"],
+      frameId: frame.id,
+    });
+    const rect2 = API.createElement({
+      type: "rectangle",
+      x: 500,
+      y: 10,
+      width: 50,
+      height: 50,
+      groupIds: ["g1"],
+      frameId: frame.id,
+    });
+
+    API.setElements([rect1, rect2, frame]);
+    API.setSelectedElements([rect1, rect2]);
+
+    API.executeAction(actionUngroup);
+
+    expect(API.getElement(rect1).frameId).toBe(frame.id);
+    expect(API.getElement(rect2).frameId).toBe(null);
   });
 });
